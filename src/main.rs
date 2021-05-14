@@ -1,6 +1,6 @@
 use std::fs;
 
-use minifb::{Window, WindowOptions, Key};
+use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use rand::random;
 
 fn hue_to_rgb(p: f64, q: f64, t:f64) -> f64 {
@@ -56,8 +56,9 @@ fn main() {
     let mut palette: Vec<u32> = vec![0; PALETTE_SIZE];
 
     let mut window = Window::new("Classic Fire Effect", SCREEN_WIDTH, SCREEN_HEIGHT, WindowOptions::default()).unwrap();
+    let mut current_hue = 3.0;
     for entry_index in 0..palette.len() {
-        let (r, g, b) = f64_color_to_u8(hsl_to_rgb(entry_index as f64 /(3.0 * palette.len() as f64), 1.0, ((entry_index as f64 * 2.0) / palette.len() as f64).min(1.0)));
+        let (r, g, b) = f64_color_to_u8(hsl_to_rgb(entry_index as f64 /(current_hue * palette.len() as f64), 1.0, ((entry_index as f64 * 2.0) / palette.len() as f64).min(1.0)));
         palette[entry_index] = u32::from_le_bytes([b, g, r, 0x00]);
     }
 
@@ -81,6 +82,24 @@ fn main() {
 
             if window.is_key_down(Key::F12) {
                 export_as_ppm(&frame_buf, SCREEN_WIDTH, SCREEN_HEIGHT, "shot.ppm");
+            }
+
+            if window.is_key_pressed(Key::F11, KeyRepeat::Yes) {
+                current_hue += 0.05;
+                println!("{}", current_hue);
+                for entry_index in 0..palette.len() {
+                    let (r, g, b) = f64_color_to_u8(hsl_to_rgb(entry_index as f64 /(current_hue * palette.len() as f64), 1.0, ((entry_index as f64 * 2.0) / palette.len() as f64).min(1.0)));
+                    palette[entry_index] = u32::from_le_bytes([b, g, r, 0x00]);
+                }
+            }
+
+            if window.is_key_pressed(Key::F10, KeyRepeat::Yes) {
+                current_hue -= 0.05;
+                println!("{}", current_hue);
+                for entry_index in 0..palette.len() {
+                    let (r, g, b) = f64_color_to_u8(hsl_to_rgb(entry_index as f64 /(current_hue * palette.len() as f64), 1.0, ((entry_index as f64 * 2.0) / palette.len() as f64).min(1.0)));
+                    palette[entry_index] = u32::from_le_bytes([b, g, r, 0x00]);
+                }
             }
 
             window.update_with_buffer(&frame_buf, SCREEN_WIDTH, SCREEN_HEIGHT).unwrap();
